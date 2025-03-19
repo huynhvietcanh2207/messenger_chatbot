@@ -22,3 +22,6 @@ Route::get('/webhook', [MessengerController::class, 'verifyWebhook']);
 Route::post('/webhook', [MessengerController::class, 'handleWebhook']);
 Route::get('/messages', [MessengerController::class, 'showMessages']);
 Route::post('/send-message', [MessengerController::class, 'sendMessage'])->name('send.message');
+Route::get('/messages/{userId?}', [MessengerController::class, 'showMessages'])->name('messages');
+//lấy tin nhắn mới nhất
+Route::get('/messages/{userId}/latest', [MessengerController::class, 'getLatestMessages']);
