@@ -25,7 +25,7 @@ class MessengerController extends Controller
             })
                 ->orderBy('created_at', 'asc')
                 ->get();
-            
+
         }
 
         return view('messages', compact('users', 'messages', 'userId'));
@@ -141,13 +141,35 @@ class MessengerController extends Controller
     private function generateBotResponse($userMessage)
     {
         $responses = [
-            'giá' => 'Sản phẩm của chúng tôi có giá từ 100k đến 500k. Bạn muốn tư vấn thêm không?',
-            'mở cửa' => 'Chúng tôi mở cửa từ 8h sáng đến 10h tối. Bạn cần hỗ trợ thêm gì không?',
-            'ship' => 'Chúng tôi có hỗ trợ giao hàng toàn quốc với phí ship từ 20k. Bạn muốn đặt hàng chứ?',
-            'khuyến mãi' => 'Hiện tại chúng tôi đang có chương trình giảm giá 10% cho đơn hàng đầu tiên.',
-            'địa chỉ' => 'Chúng tôi ở số 123, Đường ABC, TP. HCM. Bạn có muốn ghé thăm cửa hàng không?',
-            'default' => 'Xin chào! Tôi là trợ lý ảo, bạn cần tư vấn gì? 😊'
+            'giá' => 'Hiện tại, ABCXYZ cung cấp nhiều gói dịch vụ với mức giá linh hoạt, phù hợp với từng nhu cầu. Quý khách vui lòng để lại thông tin hoặc liên hệ hotline để được tư vấn chi tiết.',
+
+            'mở cửa' => 'ABCXYZ hoạt động từ 8h00 đến 18h00 từ thứ Hai đến thứ Bảy. Nếu quý khách cần hỗ trợ ngoài giờ, vui lòng liên hệ trước để được sắp xếp.',
+
+            'dịch vụ' => 'ABCXYZ chuyên cung cấp các dịch vụ về **giải pháp công nghệ, thiết kế website, phần mềm, và tư vấn hệ thống CNTT**. Quý khách cần hỗ trợ về dịch vụ nào ạ?',
+
+            'khuyến mãi' => 'Hiện tại, ABCXYZ có chương trình ưu đãi đặc biệt **giảm 15% cho khách hàng mới** khi đăng ký dịch vụ trong tháng này. Quý khách có muốn nhận ưu đãi không?',
+
+            'hỗ trợ' => 'Đội ngũ kỹ thuật ABCXYZ luôn sẵn sàng hỗ trợ 24/7. Quý khách có thể gọi hotline **[Số hotline]** hoặc nhắn tin qua đây để được tư vấn nhanh chóng.',
+
+            'địa chỉ' => 'ABCXYZ có trụ sở tại **[Địa chỉ cụ thể]**. Quý khách có thể ghé thăm trực tiếp hoặc đặt lịch hẹn để được phục vụ tốt nhất.',
+
+            'thanh toán' => 'ABCXYZ hỗ trợ nhiều phương thức thanh toán linh hoạt như **chuyển khoản ngân hàng, thanh toán qua ví điện tử, và tiền mặt**. Quý khách muốn thanh toán theo hình thức nào ạ?',
+
+            'bảo hành' => 'Chúng tôi cam kết chất lượng dịch vụ với **chính sách bảo hành lên đến 12 tháng**. Nếu có bất kỳ vấn đề nào, quý khách có thể liên hệ ngay để được hỗ trợ.',
+
+            'thời gian hoàn thành' => 'Tùy theo từng dự án, thời gian triển khai dịch vụ tại ABCXYZ thường từ **3 - 15 ngày làm việc**. Quý khách có nhu cầu gấp vui lòng thông báo trước để chúng tôi hỗ trợ tốt nhất.',
+
+            'tư vấn miễn phí' => 'ABCXYZ luôn sẵn sàng tư vấn miễn phí để giúp quý khách tìm được giải pháp phù hợp nhất. Quý khách có thể để lại thông tin hoặc gọi hotline để được hỗ trợ ngay.',
+
+            'default' => 'Xin chào! Tôi là trợ lý hỗ trợ khách hàng của ABCXYZ. Quý khách cần tư vấn về dịch vụ nào ạ? 😊 
+Dưới đây là một số câu hỏi phổ biến mà quý khách có thể quan tâm: 
+- "Giá dịch vụ ABCXYZ là bao nhiêu?" 
+- "ABCXYZ có những dịch vụ nào?" 
+- "Chính sách bảo hành của ABCXYZ ra sao?" 
+- "Hiện tại có chương trình khuyến mãi nào không?" 
+Quý khách có thể nhập một trong những câu trên hoặc nhắn nội dung khác để tôi có thể hỗ trợ tốt hơn!'
         ];
+
 
         foreach ($responses as $key => $response) {
             if (strpos(strtolower($userMessage), $key) !== false) {

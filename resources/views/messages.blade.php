@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat với khách hàng</title>
+    <title>Dịch Vụ Tư Vấn ABCXYZ</title>
     <style>
         * {
             margin: 0;
@@ -18,31 +18,33 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #f5f5f5;
+            background: #eef1f6;
         }
 
         .container {
             display: flex;
-            width: 600px;
-            height: 500px;
+            width: 700px;
+            height: 550px;
             background: white;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
             overflow: hidden;
         }
 
+        /* Danh sách user */
         .user-list {
-            width: 200px;
+            width: 220px;
             border-right: 1px solid #ddd;
             padding: 10px;
             overflow-y: auto;
-            background: #f1f1f1;
+            background: rgb(157, 221, 236);
         }
 
         .user-item {
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
-            border-bottom: 1px solid #ddd;
+            border-radius: 6px;
+            transition: background 0.3s;
         }
 
         .user-item:hover,
@@ -51,10 +53,12 @@
             color: white;
         }
 
+        /* Hộp chat */
         .chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
+            background: #fff;
         }
 
         .chat-header {
@@ -63,23 +67,43 @@
             padding: 15px;
             text-align: center;
             font-size: 18px;
+            font-weight: bold;
         }
 
         .chat-box {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: #0078ff #f0f0f0;
         }
 
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #0078ff;
+            border-radius: 5px;
+        }
+
+        /* Tin nhắn */
         .message {
             max-width: 75%;
-            padding: 10px;
-            margin: 5px;
-            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 12px;
             font-size: 14px;
             word-wrap: break-word;
+            display: inline-block;
+            position: relative;
+
+            .message {
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
         }
 
         .message.customer {
@@ -93,18 +117,41 @@
             align-self: flex-end;
         }
 
+        /* Dấu thời gian */
+        .message-time {
+            font-size: 12px;
+            margin-top: 3px;
+            text-align: right;
+        }
+
+        .message-time-divider {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin: 10px 0;
+            padding: 5px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            width: fit-content;
+            align-self: center;
+        }
+
+        /* Input gửi tin nhắn */
         .chat-footer {
             display: flex;
-            padding: 10px;
+            padding: 12px;
             border-top: 1px solid #ddd;
-            background: white;
+            background: #fff;
+            align-items: center;
         }
 
         .chat-footer input {
             flex: 1;
             padding: 10px;
-            border: none;
+            border: 1px solid #ddd;
             border-radius: 5px;
+            outline: none;
+            font-size: 14px;
         }
 
         .chat-footer button {
@@ -115,29 +162,16 @@
             padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
         }
 
         .chat-footer button:hover {
             background: #005ecb;
         }
 
-        /* .message-time {
-            font-size: 12px;
-            color: #000;
-            margin-top: 3px;
-            text-align: right;
-        } */
-        .message-time-divider {
-            text-align: center;
-            color: #666;
-            font-size: 12px;
-            margin: 10px 0;
-            padding: 5px;
-            background: #e0e0e0;
-            border-radius: 5px;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
+        body {
+            background-image: url('https://cdn-media.sforum.vn/storage/app/media/wp-content/uploads/2023/12/hinh-nen-vu-tru-72.jpg');
         }
     </style>
 </head>
@@ -154,7 +188,6 @@
             @endforeach
         </div>
 
-
         <!-- Hộp chat -->
         <div class="chat-container">
             <div class="chat-header">
@@ -165,42 +198,34 @@
                 @endif
             </div>
             <div class="chat-box" id="chatBox">
-                @foreach($messages as $message)
-                                <!-- <div class="message {{ $message->sender_id == 'bot' ? 'bot' : 'customer' }}">
-                                                                                            <strong>{{ $message->sender_id == 'bot' ? 'Bot' : 'Khách' }}:</strong> {{ $message->text }}
-                                                                                            <div class="message-time">
-                                                                                                {{ \Carbon\Carbon::parse($message->created_at)->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}
-                                                                                            </div>
-                                                                                        </div> -->
+                @php
+                    $lastTimestamp = null;
+                @endphp
 
+                @foreach($messages as $message)
                                 @php
-                                    $lastTimestamp = null; // Biến lưu mốc thời gian của tin nhắn trước
+                                    $currentTimestamp = \Carbon\Carbon::parse($message->created_at)->setTimezone('Asia/Ho_Chi_Minh');
+                                    $showTime = false;
+
+                                    if (!$lastTimestamp || $currentTimestamp->diffInMinutes($lastTimestamp) > 30) {
+                                        $showTime = true;
+                                        $lastTimestamp = $currentTimestamp;
+                                    }
                                 @endphp
 
-                                @foreach($messages as $message)
-                                            @php
-                                                $currentTimestamp = \Carbon\Carbon::parse($message->created_at)->setTimezone('Asia/Ho_Chi_Minh');
-                                                $showTime = false;
+                                @if($showTime)
+                                    <div class="message-time-divider">
+                                        {{ $currentTimestamp->format('d/m/Y H:i') }}
+                                    </div>
+                                @endif
 
-                                                if (!$lastTimestamp || $currentTimestamp->diffInMinutes($lastTimestamp) > 30) {
-                                                    $showTime = true;
-                                                    $lastTimestamp = $currentTimestamp;
-                                                }
-                                            @endphp
-
-                                            @if($showTime)
-                                                <div class="message-time-divider">
-                                                    {{ $currentTimestamp->format('d/m/Y H:i') }}
-                                                </div>
-                                            @endif
-
-                                            <div class="message {{ $message->sender_id == 'bot' ? 'bot' : 'customer' }}">
-                                                <strong>{{ $message->sender_id == 'bot' ? 'Bot' : 'Khách' }}:</strong> {{ $message->text }}
-                                            </div>
-                                @endforeach
-
+                                <div class="message {{ $message->sender_id == 'bot' ? 'bot' : 'customer' }}">
+                                    {{ $message->text }}
+                                    <div class="message-time">
+                                        {{ $currentTimestamp->format('H:i') }}
+                                    </div>
+                                </div>
                 @endforeach
-
             </div>
 
             @if($userId)
@@ -220,23 +245,28 @@
         });
 
         function sendMessage() {
-            let message = document.getElementById("messageInput").value;
-            if (message.trim() === "") return;
+            let messageInput = document.getElementById("messageInput");
+            let message = messageInput.value.trim();
+            if (message === "") return;
 
-            // Lấy userId từ giao diện
+            let chatBox = document.getElementById("chatBox");
+
+            // Hiển thị loading message
+            let loadingMessage = document.createElement("div");
+            loadingMessage.classList.add("message", "bot");
+            loadingMessage.innerHTML = `<strong>Bot:</strong> <em>Đang gửi...</em>`;
+            loadingMessage.id = "loadingMessage";
+            chatBox.appendChild(loadingMessage);
+            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+
             let userId = "{{ $userId }}";
             if (!userId) {
                 alert("Vui lòng chọn một khách hàng để nhắn tin!");
+                chatBox.removeChild(loadingMessage);
                 return;
             }
 
-            let chatBox = document.getElementById("chatBox");
-            let newMessage = document.createElement("div");
-            newMessage.classList.add("message", "bot");
-            newMessage.innerHTML = `<strong>Bot:</strong> ${message}`;
-            chatBox.appendChild(newMessage);
-
-            // Gửi tin nhắn kèm userId
+            // Gửi tin nhắn đến server
             fetch("{{ route('send.message') }}", {
                 method: "POST",
                 headers: {
@@ -246,14 +276,21 @@
                 body: JSON.stringify({ text: message, userId: userId })
             }).then(response => response.json())
                 .then(data => {
-                    console.log("Message sent successfully:", data);
+                    // Xóa loading và thêm tin nhắn thực tế từ server
+                    let botMessage = document.createElement("div");
+                    botMessage.classList.add("message", "bot");
+                    botMessage.innerHTML = `<strong>Bot:</strong> ${data.text}`;
+
+                    chatBox.replaceChild(botMessage, document.getElementById("loadingMessage"));
                 }).catch(error => {
                     console.error("Error sending message:", error);
+                    document.getElementById("loadingMessage").innerHTML = `<strong>Bot:</strong> ❌ Gửi thất bại`;
                 });
 
-            document.getElementById("messageInput").value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
+            messageInput.value = "";
         }
+
+
 
         let userId = "{{ $userId }}"; // Lấy userId từ Blade
         let lastMessageCount = {{ count($messages) }}; // Số tin nhắn ban đầu
@@ -261,7 +298,7 @@
         function fetchLatestMessages() {
             console.log("Fetching latest messages for user:", userId);
             fetch(`/messages/${userId}/latest`)
-            .then(response => response.json())
+                .then(response => response.json())
                 .then(data => {
                     console.log("Latest messages data:", data);
                     let chatBox = document.getElementById("chatBox");
