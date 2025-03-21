@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Message;
-use App\Models\User;
+use App\Models\User3; // Change to User3 model
+
 class MessengerController extends Controller
 {
     public function showMessages($userId = null)
     {
         // Lấy danh sách user từ bảng users
-        $users = User::orderBy('created_at', 'desc')->get(['messenger_id', 'name']);
+        $users = User3::orderBy('created_at', 'desc')->get(['messenger_id', 'name']); // Change to User3 model
 
         $messages = [];
 
@@ -110,7 +111,7 @@ class MessengerController extends Controller
                 $userName = $userInfo['name'] ?? 'Khách';
 
                 // Cập nhật hoặc tạo mới user
-                User::updateOrCreate(
+                User3::updateOrCreate( // Change to User3 model
                     ['messenger_id' => $senderId],
                     ['name' => $userName]
                 );
