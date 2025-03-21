@@ -182,7 +182,7 @@
         <div class="user-list">
             @foreach($users as $user)
                 <div class="user-item {{ $user->messenger_id == $userId ? 'active' : '' }}"
-                    onclick="window.location.href='{{ route('messages', ['userId' => $user->messenger_id]) }}'">
+                    onclick="window.location.href='{{ route('messages.show', ['userId' => $user->messenger_id]) }}'">
                     {{ $user->name ? $user->name : 'Khách ' . $user->messenger_id }}
                 </div>
             @endforeach
@@ -245,79 +245,71 @@
         });
 
         function sendMessage() {
-            let messageInput = document.getElementById("messageInput");
-            let message = messageInput.value.trim();
-            if (message === "") return;
+    let message = document.getElementById("messageInput").value;
+    if (message.trim() === "") return;
 
-            let chatBox = document.getElementById("chatBox");
+    let userId = "{{ $userId }}";
+    if (!userId) {
+        alert("Vui lòng chọn một khách hàng để nhắn tin!");
+        return;
+    }
 
-            // Hiển thị loading message
-            let loadingMessage = document.createElement("div");
-            loadingMessage.classList.add("message", "bot");
-            loadingMessage.innerHTML = `<strong>Bot:</strong> <em>Đang gửi...</em>`;
-            loadingMessage.id = "loadingMessage";
-            chatBox.appendChild(loadingMessage);
-            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    let chatBox = document.getElementById("chatBox");
+    let newMessage = document.createElement("div");
+    newMessage.classList.add("message", "bot");
+    newMessage.innerHTML = `${message} <div class="message-time">${new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>`;
+    chatBox.appendChild(newMessage);
 
-            let userId = "{{ $userId }}";
-            if (!userId) {
-                alert("Vui lòng chọn một khách hàng để nhắn tin!");
-                chatBox.removeChild(loadingMessage);
-                return;
-            }
-
-            // Gửi tin nhắn đến server
-            fetch("{{ route('send.message') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({ text: message, userId: userId })
-            }).then(response => response.json())
-                .then(data => {
-                    // Xóa loading và thêm tin nhắn thực tế từ server
-                    let botMessage = document.createElement("div");
-                    botMessage.classList.add("message", "bot");
-                    botMessage.innerHTML = `<strong>Bot:</strong> ${data.text}`;
-
-                    chatBox.replaceChild(botMessage, document.getElementById("loadingMessage"));
-                }).catch(error => {
-                    console.error("Error sending message:", error);
-                    document.getElementById("loadingMessage").innerHTML = `<strong>Bot:</strong> ❌ Gửi thất bại`;
-                });
-
-            messageInput.value = "";
+    // Sử dụng đường dẫn tương đối
+    fetch("/send-message", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({ text: message, userId: userId })
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.json();
+    }).then(data => {
+        console.log("Message sent successfully:", data);
+    }).catch(error => {
+        console.error("Error sending message:", error);
+        alert("Có lỗi khi gửi tin nhắn: " + error.message);
+    });
 
-
+    document.getElementById("messageInput").value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
         let userId = "{{ $userId }}"; // Lấy userId từ Blade
         let lastMessageCount = {{ count($messages) }}; // Số tin nhắn ban đầu
 
         function fetchLatestMessages() {
-            console.log("Fetching latest messages for user:", userId);
-            fetch(`/messages/${userId}/latest`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Latest messages data:", data);
-                    let chatBox = document.getElementById("chatBox");
+    console.log("Fetching latest messages for user:", userId);
+    fetch(`/messages/${userId}/latest`)  // Sử dụng đường dẫn tương đối
+        .then(response => response.json())
+        .then(data => {
+            console.log("Latest messages data:", data);
+            let chatBox = document.getElementById("chatBox");
 
-                    if (data.length > lastMessageCount) {
-                        data.slice(lastMessageCount).forEach(msg => {
-                            let messageDiv = document.createElement("div");
-                            messageDiv.classList.add("message", msg.sender_id === 'bot' ? 'bot' : 'customer');
-                            messageDiv.innerHTML = `<strong>${msg.sender_id === 'bot' ? 'Bot' : 'Khách'}:</strong> ${msg.text}`;
-                            chatBox.appendChild(messageDiv);
-                        });
-
-                        chatBox.scrollTop = chatBox.scrollHeight; // Luôn cuộn xuống tin nhắn mới nhất
-                        lastMessageCount = data.length; // Cập nhật số lượng tin nhắn
-                    }
-                }).catch(error => {
-                    console.error("Error fetching latest messages:", error);
+            if (data.length > lastMessageCount) {
+                data.slice(lastMessageCount).forEach(msg => {
+                    let messageDiv = document.createElement("div");
+                    messageDiv.classList.add("message", msg.sender_id === 'bot' ? 'bot' : 'customer');
+                    messageDiv.innerHTML = `${msg.text} <div class="message-time">${new Date(msg.created_at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>`;
+                    chatBox.appendChild(messageDiv);
                 });
-        }
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+                lastMessageCount = data.length;
+            }
+        }).catch(error => {
+            console.error("Error fetching latest messages:", error);
+        });
+}
 
         // Cập nhật tin nhắn mới mỗi 2 giây
         setInterval(fetchLatestMessages, 2000);
@@ -327,7 +319,6 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         });
     </script>
-
 </body>
 
 </html>
